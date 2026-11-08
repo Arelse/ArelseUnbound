@@ -46,15 +46,31 @@ jobs:
       - name: Build JRE JAR files
         run: |
           chmod +x gradlew
+          retry() {
+            for i in 1 2 3 4 5; do
+              "$@" && return 0
+              echo "Attempt $i failed (likely a server 504), retrying in 60s..."
+              sleep 60
+            done
+            return 1
+          }
           mkdir out
-          ./gradlew jre_lwjgl3glfw:build --no-daemon
+          retry ./gradlew jre_lwjgl3glfw:build --no-daemon
 
       - name: Build Release ${{ matrix.arch }}
         env:
           MOVTERY_KEYSTORE_PASSWORD: ${{ secrets.MOVTERY_KEYSTORE_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew ZalithLauncher:assemblerelease -Darch=${{ matrix.arch }}
+          retry() {
+            for i in 1 2 3 4 5; do
+              "$@" && return 0
+              echo "Attempt $i failed (likely a server 504), retrying in 60s..."
+              sleep 60
+            done
+            return 1
+          }
+          retry ./gradlew ZalithLauncher:assemblerelease -Darch=${{ matrix.arch }}
 
       - name: Upload Release ${{matrix.arch}}
         continue-on-error: true
@@ -84,17 +100,32 @@ jobs:
       - name: Build JRE JAR files
         run: |
           chmod +x gradlew
+          retry() {
+            for i in 1 2 3 4 5; do
+              "$@" && return 0
+              echo "Attempt $i failed (likely a server 504), retrying in 60s..."
+              sleep 60
+            done
+            return 1
+          }
           mkdir out
-          ./gradlew jre_lwjgl3glfw:build --no-daemon
+          retry ./gradlew jre_lwjgl3glfw:build --no-daemon
 
       - name: Build Debug ${{matrix.arch}}
         run: |
           chmod +x gradlew
-          ./gradlew ZalithLauncher:assembleDebug -Darch=${{ matrix.arch }}
+          retry() {
+            for i in 1 2 3 4 5; do
+              "$@" && return 0
+              echo "Attempt $i failed (likely a server 504), retrying in 60s..."
+              sleep 60
+            done
+            return 1
+          }
+          retry ./gradlew ZalithLauncher:assembleDebug -Darch=${{ matrix.arch }}
 
       - name: Upload Debug ${{matrix.arch}}
         uses: actions/upload-artifact@v4
         with:
           name: ZalithLauncher(Debug) ${{ matrix.arch }}
           path: ZalithLauncher/build/outputs/apk/debug/*
-          
