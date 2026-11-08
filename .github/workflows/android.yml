@@ -7,7 +7,9 @@ on:
 
 jobs:
   BuildRelease:
-    if: github.repository_owner == 'Arelse' && !startsWith(github.ref, 'refs/pull/') && github.ref_name == 'main'
+    # Disabled for the fork: movtery-key.jks belongs to upstream and the fork has no password for it.
+    # Re-enable only after adding your own keystore and a MOVTERY_KEYSTORE_PASSWORD secret.
+    if: false
     runs-on: ubuntu-22.04
     strategy:
       matrix:
