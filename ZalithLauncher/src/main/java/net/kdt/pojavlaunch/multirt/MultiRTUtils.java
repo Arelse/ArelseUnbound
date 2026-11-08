@@ -259,7 +259,7 @@ public class MultiRTUtils {
                 try {
                     // android.system.Os
                     // Libcore one support all Android versions
-                    Os.symlink(tarEntry.getName(), tarEntry.getLinkName());
+                    Os.symlink(tarEntry.getLinkName(), destPath.getAbsolutePath());
                 } catch (Throwable e) {
                     Logging.e("MultiRT", Tools.printToString(e));
                 }
