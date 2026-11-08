@@ -393,6 +393,8 @@ public final class JREUtils {
         // Force LWJGL to use the Freetype library intended for it, instead of using the one
         // that we ship with Java (since it may be older than what's needed)
         userArgs.add("-Dorg.lwjgl.freetype.libname="+ DIR_NATIVE_LIB +"/libfreetype.so");
+        // LWJGL 3.4 SDL backend, used by Minecraft 26.x for windowing
+        userArgs.add("-Dorg.lwjgl.sdl.libname=" + DIR_NATIVE_LIB + "/libSDL3.so");
 
         // Some phones are not using the right number of cores, fix that
         userArgs.add("-XX:ActiveProcessorCount=" + java.lang.Runtime.getRuntime().availableProcessors());
