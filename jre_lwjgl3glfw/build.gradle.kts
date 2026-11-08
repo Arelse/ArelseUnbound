@@ -4,6 +4,9 @@ plugins {
 
 group = "org.lwjgl.glfw"
 
+// LWJGL 3.4.x Java classes from Maven Central (natives are built separately for Android).
+val lwjglVersion: String = (project.findProperty("lwjglVersion") as? String) ?: "3.4.1"
+
 configurations.getByName("default").isCanBeResolved = true
 
 tasks.jar {
@@ -23,7 +26,7 @@ tasks.jar {
     })
     exclude("net/java/openjdk/cacio/ctc/**")
     manifest {
-        attributes("Manifest-Version" to "3.3.6")
+        attributes("Manifest-Version" to lwjglVersion)
         attributes("Automatic-Module-Name" to "org.lwjgl")
     }
 }
@@ -35,5 +38,15 @@ java {
 }
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    // Local jars that are not on Maven Central
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("lwjgl-lwjglx.jar", "jsr305.jar"))))
+
+    // LWJGL 3.4.x Java API (no natives: Zalith provides its own Android natives)
+    listOf(
+        "lwjgl", "lwjgl-glfw", "lwjgl-opengl", "lwjgl-openal", "lwjgl-stb",
+        "lwjgl-freetype", "lwjgl-tinyfd", "lwjgl-jemalloc", "lwjgl-nanovg",
+        "lwjgl-sdl", "lwjgl-vulkan", "lwjgl-shaderc", "lwjgl-spvc", "lwjgl-vma"
+    ).forEach { artifact ->
+        implementation("org.lwjgl:$artifact:$lwjglVersion")
+    }
 }
