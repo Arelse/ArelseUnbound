@@ -1,0 +1,60 @@
+# Builds libSDL3.so for Android from the upstream SDL3 source.
+# Run manually from the Actions tab (workflow_dispatch). Output goes to artifacts;
+# copy the .so files into ZalithLauncher/src/main/jniLibs/<abi>/ and commit them.
+#
+# NOT YET TESTED. The liblwjgl_sdl.so JNI glue (LWJGL's own SDL binding) is NOT built here yet.
+# Without it, Minecraft 26.x still fails when the SDL class initializes.
+name: Build SDL3 natives
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdl_tag:
+        description: "SDL3 git tag to build (check https://github.com/libsdl-org/SDL/tags)"
+        required: true
+        default: "release-3.2.0"
+
+jobs:
+  build-sdl3:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: ["arm64-v8a", "armeabi-v7a", "x86_64", "x86"]
+
+    steps:
+      - name: Checkout launcher
+        uses: actions/checkout@v4
+
+      - name: Set up Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+
+      - name: Fetch SDL3 source
+        run: |
+          git clone --depth 1 --branch "${{ inputs.sdl_tag || github.event.inputs.sdl_tag }}" \
+            https://github.com/libsdl-org/SDL.git sdl3-src
+
+      - name: Build libSDL3.so
+        run: |
+          cmake -S sdl3-src -B build-${{ matrix.abi }} \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=${{ matrix.abi }} \
+            -DANDROID_PLATFORM=android-26 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TEST_LIBRARY=OFF
+          cmake --build build-${{ matrix.abi }} --parallel
+
+      - name: Collect output
+        run: |
+          mkdir -p out/${{ matrix.abi }}
+          cp "$(find build-${{ matrix.abi }} -name 'libSDL3.so' | head -n1)" out/${{ matrix.abi }}/
+          ls -la out/${{ matrix.abi }}
+
+      - name: Upload libSDL3.so
+        uses: actions/upload-artifact@v4
+        with:
+          name: libSDL3-${{ matrix.abi }}
+          path: out/${{ matrix.abi }}/libSDL3.so
+          
