@@ -14,6 +14,7 @@ import com.movtery.zalithlauncher.feature.accounts.AccountsManager
 import com.movtery.zalithlauncher.feature.log.Logging
 import com.movtery.zalithlauncher.feature.version.Version
 import com.movtery.zalithlauncher.renderer.Renderers
+import com.movtery.zalithlauncher.renderer.renderers.GL4ESRenderer
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.AllStaticSettings
 import com.movtery.zalithlauncher.support.touch_controller.ControllerProxy
@@ -123,6 +124,7 @@ class LaunchGame {
             if (!Renderers.isCurrentRendererValid()) {
                 Renderers.setCurrentRenderer(activity, AllSettings.renderer.getValue())
             }
+            ensureRendererForVersion(activity, minecraftVersion)
 
             var account = AccountsManager.currentAccount!!
             if (minecraftVersion.offlineAccountLogin) {
@@ -161,6 +163,28 @@ class LaunchGame {
 
             //Note that we actually stall in the above function, even if the game crashes. But let's be safe.
             GameService.setActive(false)
+        }
+
+        private const val MOBILEGLUES_ID = "com.fcl.plugin.mobileglues"
+
+        /**
+         * Minecraft 26.x+ needs OpenGL 3+ / Vulkan features that GL4ES (OpenGL ES 2) can't provide.
+         * If GL4ES is selected for such a version, switch to MobileGlues when it is installed.
+         */
+        private fun ensureRendererForVersion(activity: Context, version: Version) {
+            val major = Regex("^(\\d+)\\.").find(version.getVersionName())
+                ?.groupValues?.get(1)?.toIntOrNull() ?: return
+            if (major < 26) return
+            if (Renderers.getCurrentRenderer() !is GL4ESRenderer) return
+
+            val mobileGlues = Renderers.getCompatibleRenderers(activity).second
+                .firstOrNull { it.getUniqueIdentifier() == MOBILEGLUES_ID }
+            if (mobileGlues == null) {
+                Logging.w("Renderers", "Minecraft $major.x needs MobileGlues, but the plugin is not installed")
+                return
+            }
+            Renderers.setCurrentRenderer(activity, MOBILEGLUES_ID, false)
+            Logging.i("Renderers", "Switched to MobileGlues for Minecraft $major.x")
         }
 
         private fun getRuntime(activity: Activity, version: Version, targetJavaVersion: Int): String {
