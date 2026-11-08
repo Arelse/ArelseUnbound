@@ -76,7 +76,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: ZalithLauncher(Release) ${{ matrix.arch }}
+          name: ArelseUnbound(Release) ${{ matrix.arch }}
           path: ZalithLauncher/build/outputs/apk/release/*
 
   BuildDebug:
@@ -127,5 +127,5 @@ jobs:
       - name: Upload Debug ${{matrix.arch}}
         uses: actions/upload-artifact@v4
         with:
-          name: ZalithLauncher(Debug) ${{ matrix.arch }}
+          name: ArelseUnbound(Debug) ${{ matrix.arch }}
           path: ZalithLauncher/build/outputs/apk/debug/*
